@@ -1,0 +1,23 @@
+ [
+        {
+            "role": "admin",
+            "_id": "605942c3f1bf254794c7232e",
+            "name": "Odbayar Buyan-Ulzii",
+            "email": "odko@gmail.com",
+            "password": "123456"
+        },
+        {
+            "role": "operator",
+            "_id": "5ea015cec0f5e551d8d1615d",
+            "name": "Сараа",
+            "email": "op@gmail.com",
+            "password": "1234"
+          },
+        {
+            "role": "user",
+            "_id": "60594ea1c9cc415884ad72fd",
+            "name": "saraa",
+            "email": "saraa@gmail.com",
+            "password": "123456"
+        }
+    ]
