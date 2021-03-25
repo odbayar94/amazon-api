@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect } = require("../middleware/protect");
+const { protect, authorize } = require("../middleware/protect");
 
 const {
   register,
@@ -14,20 +14,34 @@ const {
 } = require("../controller/users");
 
 const { getUserBooks } = require("../controller/books");
+const { getUserComments } = require("../controller/comments");
 
 const router = express.Router();
 
-//registerUser
+//"/api/v1/users"
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
 
 router.use(protect);
+
 //"/api/v1/users"
-router.route("/").get(getUsers).post(createUser);
-//getSingleUser
-router.route("/:id").get(getUser).delete(deleteUser).put(updateUser);
-router.route("/:id/books").get(getUserBooks);
+router
+  .route("/")
+  .get(authorize("admin"), getUsers)
+  .post(authorize("admin"), createUser);
+
+router
+  .route("/:id")
+  .get(authorize("admin", "operator"), getUser)
+  .put(authorize("admin"), updateUser)
+  .delete(authorize("admin"), deleteUser);
+
+router
+  .route("/:id/books")
+  .get(authorize("admin", "operator", "user"), getUserBooks);
+
+router.route("/:id/comments").get(getUserComments);
 
 module.exports = router;

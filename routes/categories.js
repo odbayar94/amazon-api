@@ -10,20 +10,20 @@ const {
   deleteCategory,
 } = require("../controller/categories");
 
-// const { getBooks } = require("../controller/books");
-// /api/v1/categories/:id/books
-// router.route("/:categoryId/books").get(getBooks);
-
-const booksRouter = require("./books");
-router.use("/:categoryId/books", booksRouter);
+// api/v1/categories/:id/books
+const { getCategoryBooks } = require("../controller/books");
+router.route("/:categoryId/books").get(getCategoryBooks);
 
 //"/api/v1/categories"
-router.route("/").get(getCategories).post(protect, createCategory);
+router
+  .route("/")
+  .get(getCategories)
+  .post(protect, authorize("admin"), createCategory);
 
 router
   .route("/:id")
   .get(getCategory)
-  .put(protect, updateCategory)
-  .delete(protect, deleteCategory);
+  .put(protect, authorize("admin", "operator"), updateCategory)
+  .delete(protect, authorize("admin"), deleteCategory);
 
 module.exports = router;

@@ -11,8 +11,8 @@ const errorHandler = (err, req, res, next) => {
   // }
 
   if (error.name === "JsonWebTokenError" && error.message === "invalid token") {
-    error.message = "Буруу токен дамжуулсан байна";
-    error.statusCode = 401;
+    error.message = "Буруу токен дамжуулсан байна!";
+    error.statusCode = 400;
   }
 
   if (error.code === 11000) {

@@ -4,6 +4,7 @@ const asyncHandler = require("express-async-handler");
 const paginate = require("../utils/paginate");
 const sendEmail = require("../utils/email");
 const crypto = require("crypto");
+
 // register
 exports.register = asyncHandler(async (req, res, next) => {
   const user = await User.create(req.body);
@@ -42,13 +43,11 @@ exports.login = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    login: true,
     token: user.getJsonWebToken(),
     user: user,
   });
 });
 
-//Хэрэглэгчийн мэдээллийн авна
 exports.getUsers = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -100,7 +99,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    throw new MyError(req.params.id + " ID-тэй хэрэглэгч байхгүй.", 400);
+    throw new MyError(req.params.id + " ID-тэй хэрэглэгч байхгүйээээ.", 400);
   }
 
   res.status(200).json({
@@ -113,7 +112,7 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
   if (!user) {
-    throw new MyError(req.params.id + " ID-тэй user байхгүйээээ.", 400);
+    throw new MyError(req.params.id + " ID-тэй хэрэглэгч байхгүйээээ.", 400);
   }
 
   user.remove();
@@ -126,36 +125,42 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   if (!req.body.email) {
-    throw new MyError("Та нууц үг сэргээх имэйл хаягаа дамжуулна уу", 401);
+    throw new MyError("Та нууц үг сэргээх имэйл хаягаа дамжуулна уу", 400);
   }
+
   const user = await User.findOne({ email: req.body.email });
+
   if (!user) {
     throw new MyError(req.body.email + " имэйлтэй хэрэглэгч олдсонгүй!", 400);
   }
 
   const resetToken = user.generatePasswordChangeToken();
+  await user.save();
 
-  await user.save({ validateBeforeSave: false });
+  // await user.save({ validateBeforeSave: false });
 
-  //Имэйл илгээнэ
+  // Имэйл илгээнэ
   const link = `https://amazon.mn/changepassword/${resetToken}`;
 
-  const message = `Сайн байна уу, <br><br>Та нууц үгээ солих хүсэлт игээсэн байна нууц үгээ доорх линк дээр дарж солино уу.<br><br><a href="${link}">${link}</a>`;
-  const emailInfo = await sendEmail({
+  const message = `Сайн байна уу<br><br>Та нууц үгээ солих хүсэлт илгээлээ.<br> Нууц үгээ доорхи линк дээр дарж солино уу:<br><br><a target="_blank" href="${link}">${link}</a><br><br>Өдрийг сайхан өнгөрүүлээрэй!`;
+
+  const info = await sendEmail({
     email: user.email,
     subject: "Нууц үг өөрчлөх хүсэлт",
     message,
   });
+
+  console.log("Message sent: %s", info.messageId);
+
   res.status(200).json({
     success: true,
     resetToken,
-    message,
   });
 });
 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   if (!req.body.resetToken || !req.body.password) {
-    throw new MyError("Та токен болон нууц үгээ дамжуулна уу", 401);
+    throw new MyError("Та токен болон нууц үгээ дамжуулна уу", 400);
   }
 
   const encrypted = crypto
@@ -169,14 +174,13 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    throw new MyError("Токен хүчингүй байна", 400);
+    throw new MyError("Токен хүчингүй байна!", 400);
   }
 
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
-
-  await user.save({ validateBeforeSave: false });
+  await user.save();
 
   const token = user.getJsonWebToken();
 

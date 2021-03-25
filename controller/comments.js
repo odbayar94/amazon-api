@@ -48,11 +48,27 @@ exports.getComment = asyncHandler(async (req, res, next) => {
     throw new MyError(`${req.params.id} id тэй коммент олдсонгүй.`, 400);
   }
 
+  const result = await req.db.sequelize.query(
+    "select * from comment where comment like '%гоё%'",
+    {
+      model: req.db.comment,
+    }
+  );
+
+  result[0].comment = "Ёстой гоё ном!";
+  result[0].save();
+
+  const [uResult, uMeta] = await req.db.sequelize.query(
+    " update comment set comment = 'лайтай...' where id=4"
+  );
+
   res.status(200).json({
     success: true,
+    result,
+    uResult,
+    uMeta,
     user: await comment.getUser(),
     book: await comment.getBook(),
-    magic: Object.keys(req.db.comment.prototype),
     data: comment,
   });
 });
@@ -96,5 +112,39 @@ exports.getComments = asyncHandler(async (req, res, next) => {
     success: true,
     data: comments,
     pagination,
+  });
+});
+
+// Lazy loading
+exports.getUserComments = asyncHandler(async (req, res, next) => {
+  let user = await req.db.user.findByPk(req.params.id);
+
+  if (!user) {
+    throw new MyError(`${req.params.id} id тэй хэрэглэгч олдсонгүй.`, 400);
+  }
+
+  // Lazy load
+  const comments = await user.getComments();
+
+  res.status(200).json({
+    success: true,
+    user,
+    comments,
+  });
+});
+
+// Eager loading
+exports.getBookComments = asyncHandler(async (req, res, next) => {
+  let book = await req.db.book.findByPk(req.params.id, {
+    include: req.db.comment,
+  });
+
+  if (!book) {
+    throw new MyError(`${req.params.id} id тэй ном олдсонгүй.`, 400);
+  }
+
+  res.status(200).json({
+    success: true,
+    book,
   });
 });
