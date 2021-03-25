@@ -20,11 +20,14 @@
     "express-async-handler": "^1.1.4",
     "express-fileupload": "^1.2.1",
     "jsonwebtoken": "^8.5.1",
+    "mariadb": "^2.5.3",
     "mongoose": "^5.12.1",
     "morgan": "^1.10.0",
+    "mysql2": "^2.2.5",
     "nodemailer": "^6.5.0",
     "request": "^2.88.2",
     "rotating-file-stream": "^2.1.5",
+    "sequelize": "^6.6.2",
     "transliteration": "^2.2.0"
   },
   "devDependencies": {

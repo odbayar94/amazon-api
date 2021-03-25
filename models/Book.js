@@ -51,10 +51,12 @@ const BookSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+
     createUser: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
+
     updateUser: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
@@ -74,6 +76,7 @@ BookSchema.statics.computeCategoryAveragePrice = async function (catId) {
     { $group: { _id: "$category", avgPrice: { $avg: "$price" } } },
   ]);
 
+  console.log(obj);
   let avgPrice = null;
 
   if (obj.length > 0) avgPrice = obj[0].avgPrice;
