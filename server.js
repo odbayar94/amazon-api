@@ -19,15 +19,12 @@ const categoriesRoutes = require("./routes/categories");
 const booksRoutes = require("./routes/books");
 const usersRoutes = require("./routes/users");
 const commentsRoutes = require("./routes/comments");
-const injectDb = require("./middleware/injectDb");
+
 const errorHandler = require("./middleware/error");
 const connectDB = require("./config/db");
 
 // Аппын тохиргоог process.env рүү ачаалах
 dotenv.config({ path: "./config/config.env" });
-
-// Mysql тэй ажиллах обьект
-const db = require("./config/db-mysql");
 
 // Express апп үүсгэх
 const app = express();
@@ -86,8 +83,6 @@ app.use(xss());
 app.use(mongoSanitize());
 // Сэрвэр рүү upload хийсэн файлтай ажиллана
 app.use(fileupload());
-// req.db рүү mysql db болон sequelize моделиудыг оруулна
-app.use(injectDb(db));
 
 // Morgan logger-ийн тохиргоо
 var accessLogStream = rfs.createStream("access.log", {
@@ -104,25 +99,6 @@ app.use("/api/v1/comments", commentsRoutes);
 
 // Алдаа үүсэхэд барьж авч алдааны мэдээллийг клиент тал руу автоматаар мэдээлнэ
 app.use(errorHandler);
-
-// Sequelize моделиудын холбоог зааж өгнө.
-// Ингэснээр db.user.getBooks г.м-ээр дуудаж ажиллах боломжтой болно
-db.user.belongsToMany(db.book, { through: db.comment });
-db.book.belongsToMany(db.user, { through: db.comment });
-db.user.hasMany(db.comment);
-db.comment.belongsTo(db.user);
-db.book.hasMany(db.comment);
-db.comment.belongsTo(db.book);
-db.category.hasMany(db.book);
-db.book.belongsTo(db.category);
-
-// Моделиудаас базыг үүсгэнэ (хэрэв үүсээгүй бол)
-db.sequelize
-  .sync()
-  .then((result) => {
-    console.log("sync hiigdlee...");
-  })
-  .catch((err) => console.log(err));
 
 // express сэрвэрийг асаана.
 const server = app.listen(
