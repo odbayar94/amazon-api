@@ -41,10 +41,29 @@ exports.login = asyncHandler(async (req, res, next) => {
     throw new MyError("Имэйл болон нууц үгээ зөв оруулна уу", 401);
   }
 
-  res.status(200).json({
+  const token = user.getJsonWebToken();
+
+  const cookieOption = {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+  };
+
+  res.status(200).cookie("amazon-token", token, cookieOption).json({
     success: true,
-    token: user.getJsonWebToken(),
+    token,
     user: user,
+  });
+});
+
+exports.logout = asyncHandler(async (req, res, next) => {
+  const cookieOption = {
+    expires: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+  };
+
+  res.status(200).cookie("amazon-token", null, cookieOption).json({
+    success: true,
+    data: "logged out...",
   });
 });
 

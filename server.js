@@ -14,7 +14,12 @@ const booksRoutes = require("./routes/books");
 const usersRoutes = require("./routes/users");
 const commentsRoutes = require("./routes/comments");
 const injectDb = require("./middleware/injectDb");
+const cors = require("cors");
+var cookieParser = require("cookie-parser");
 
+const mongoSanitize = require("express-mongo-sanitize");
+const helmet = require("helmet");
+var xss = require("xss-clean");
 // Аппын тохиргоог process.env рүү ачаалах
 dotenv.config({ path: "./config/config.env" });
 
@@ -30,10 +35,34 @@ var accessLogStream = rfs.createStream("access.log", {
   path: path.join(__dirname, "log"),
 });
 
+var whitelist = ["http://localhost:3000"];
+
+var corsOptions = {
+  origin: function (origin, callback) {
+    console.log(origin);
+    if (origin === undefined || whitelist.indexOf(origin) !== -1) {
+      // Энэ домэйнээс манай рест рүү хандахыг зөвшөөрнө
+      callback(null, true);
+    } else {
+      // Энэ домэйнд хандахыг хориглоно.
+      callback(new Error("Horigloj baina.."));
+    }
+  },
+  allowedHeaders: "Authorization, Set-Cookie, Content-Type",
+  methods: "GET, POST, PUT, DELETE",
+  credentials: true,
+};
+
 // Body parser
-app.use(express.json());
-app.use(fileupload());
+app.use(cookieParser());
 app.use(logger);
+app.use(express.json());
+app.use(cors(corsOptions));
+app.use(helmet());
+app.use(xss());
+// To remove data, use:
+app.use(mongoSanitize());
+app.use(fileupload());
 app.use(injectDb(db));
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use("/api/v1/categories", categoriesRoutes);
